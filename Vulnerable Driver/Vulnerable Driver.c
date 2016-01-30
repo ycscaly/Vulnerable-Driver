@@ -8,10 +8,14 @@
 #define IOCTL_TRIGGER_WRITE_WHAT_WHERE_VULNERABILITY CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_UPDATE_BYTE_ADDRESS  CTL_CODE(FILE_DEVICE_UNKNOWN, 0x803, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_TRIGGER_INCREMENT_ARBITRARY_BYTE_VULNERABILITY CTL_CODE(FILE_DEVICE_UNKNOWN, 0x804, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_UPDATE_NEW_PROGRAM_COUTNER  CTL_CODE(FILE_DEVICE_UNKNOWN, 0x805, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_TRIGGER_CONTROL_PROGRAM_COUNTER_VULNERABILITY CTL_CODE(FILE_DEVICE_UNKNOWN, 0x806, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
 static PUINT64 what = NULL, where = NULL;
 static PUINT8 byteAddress = NULL;
+static void (*programCounter)() = NULL;
+
 
 NTSTATUS ioctlHandler(
 	PDEVICE_OBJECT DeviceObject,
@@ -33,7 +37,6 @@ NTSTATUS ioctlHandler(
 	if (ctl == IOCTL_UPDATE_WHAT)
 	{
 		DbgPrint("Updating new value");
-		DbgPrint("Input len : %x\n", inLen);
 		if (input)
 		{
 			DbgPrint("%16llx\n", *input);
@@ -43,7 +46,6 @@ NTSTATUS ioctlHandler(
 	else if (ctl == IOCTL_UPDATE_WHERE)
 	{
 		DbgPrint("Updating target address");
-		DbgPrint("Input len : %x\n", inLen);
 		if (input)
 		{
 			DbgPrint("%16llx\n", *input);
@@ -60,7 +62,6 @@ NTSTATUS ioctlHandler(
 	else if (ctl == IOCTL_UPDATE_BYTE_ADDRESS)
 	{
 		DbgPrint("Updating byte address");
-		DbgPrint("Input len : %x\n", inLen);
 		if (input)
 		{
 			DbgPrint("%16llx\n", *input);
@@ -74,7 +75,25 @@ NTSTATUS ioctlHandler(
 		DbgPrint("Ownage\n");
 		*byteAddress += 1;
 	}
-	DbgPrint("Globals Status\n What %016llx Where %016llx\n Byte Address %016llx\n ", what, where, byteAddress);
+	else if (ctl == IOCTL_UPDATE_NEW_PROGRAM_COUTNER)
+	{
+		DbgPrint("Updating program counter to ");
+		if (input)
+		{
+			DbgPrint("%16llx\n", *(PUINT64*)input);
+			programCounter = (void(*)())(*(PUINT64*)input);
+		}
+	}
+	else if (ctl == IOCTL_TRIGGER_CONTROL_PROGRAM_COUNTER_VULNERABILITY)
+	{
+		DbgPrint("Triggering Control PC Vulnerability... Are you sure?\n");
+		DbgBreakPoint();
+
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+		programCounter();
+	}
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

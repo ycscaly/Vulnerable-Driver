@@ -191,6 +191,11 @@
       <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\km;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Release|x64'">
+    <ClCompile>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <Inf Include="VulnerableDriver.inf" />
   </ItemGroup>
